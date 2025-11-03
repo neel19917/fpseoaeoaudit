@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate Extension Icons</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .info { background: #e3f2fd; padding: 12px; border-radius: 4px; margin: 20px 0; }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 8px 4px;
+    }
+    button:hover { background: #0056b3; }
+    #status { margin-top: 20px; color: #28a745; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <h1>SEO & AEO Auditor - Icon Generator</h1>
+  <div class="info">
+    Click the button below to generate all required icon sizes (16x16, 48x48, 128x128).
+    The icons will be downloaded automatically.
+  </div>
+  
+  <button onclick="generateAllIcons()">Generate All Icons</button>
+  <div id="status"></div>
+
+  <script>
+    function generateIcon(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      
+      // Blue gradient background
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#0066cc');
+      gradient.addColorStop(1, '#004499');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+      
+      // White border circle
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = Math.max(1, size / 16);
+      const margin = size / 4;
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2 - margin, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Text for larger icons
+      if (size >= 48) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.floor(size / 3)}px Arial, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const text = size >= 64 ? 'SEO' : 'S';
+        ctx.fillText(text, size / 2, size / 2);
+      } else {
+        // Small magnifying glass icon for 16x16
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(1, size / 8);
+        ctx.beginPath();
+        const center = size / 2;
+        const radius = size / 3;
+        ctx.arc(center, center, radius, 0.3, Math.PI * 1.7);
+        ctx.stroke();
+        // Draw handle
+        ctx.beginPath();
+        ctx.moveTo(center + radius * 0.7, center + radius * 0.7);
+        ctx.lineTo(center + radius * 1.2, center + radius * 1.2);
+        ctx.stroke();
+      }
+      
+      return canvas.toDataURL('image/png');
+    }
+    
+    function downloadIcon(dataUrl, filename) {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    function generateAllIcons() {
+      const sizes = [16, 48, 128];
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = 'Generating icons...';
+      
+      sizes.forEach((size, index) => {
+        setTimeout(() => {
+          const dataUrl = generateIcon(size);
+          // Convert data URL to blob for download
+          fetch(dataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+              const url = URL.createObjectURL(blob);
+              downloadIcon(url, `icon${size}.png`);
+              URL.revokeObjectURL(url);
+              
+              if (index === sizes.length - 1) {
+                statusDiv.textContent = '✓ All icons generated and downloaded!';
+                statusDiv.style.color = '#28a745';
+              }
+            });
+        }, index * 300);
+      });
+    }
+  </script>
+</body>
+</html>
+
+

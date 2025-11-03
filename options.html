@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEO & AEO Auditor - Settings</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+      background: #f8f9fa;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+    }
+
+    .input-with-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-with-toggle input {
+      flex: 1;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    button:active {
+      background: #004085;
+    }
+
+    .toggle-btn {
+      background: #6c757d;
+      padding: 10px 16px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .status {
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 12px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .status.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      display: block;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      display: block;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>SEO & AEO Auditor Settings</h1>
+  <p class="subtitle">Configure your Claude API key and preferences</p>
+
+  <div class="section">
+    <div class="form-group">
+      <label for="apiKey">Anthropic API Key</label>
+      <div class="help-text">
+        Your API key is stored securely in Chrome sync storage and never shared.
+        <a href="https://console.anthropic.com/" target="_blank">Get your API key here</a>
+      </div>
+      <div class="input-with-toggle">
+        <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+        <button class="toggle-btn" id="toggleKey" type="button">Show</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="model">Claude Model</label>
+      <div class="help-text">
+        The Claude model to use for audits. claude-sonnet-4-5 is recommended for the best balance of quality and performance.
+      </div>
+      <select id="model">
+        <option value="claude-sonnet-4-5-20250929">claude-sonnet-4-5 (Latest - Recommended)</option>
+        <option value="claude-opus-4-1-20250805">claude-opus-4-1 (Most capable)</option>
+        <option value="claude-haiku-4-5-20251015">claude-haiku-4-5 (Fastest, cheapest)</option>
+        <option value="claude-3-5-sonnet-latest">claude-3-5-sonnet-latest (Previous gen)</option>
+        <option value="claude-3-5-haiku-latest">claude-3-5-haiku-latest (Previous gen)</option>
+        <option value="claude-3-opus-latest">claude-3-opus-latest (Previous gen)</option>
+        <option value="claude-3-sonnet-latest">claude-3-sonnet-latest</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="verboseLogging" style="width: auto; cursor: pointer;">
+        <span>Enable Verbose Logging</span>
+      </label>
+      <div class="help-text">
+        Shows detailed logs in the browser console for debugging. Useful for troubleshooting issues.
+      </div>
+    </div>
+
+    <button id="saveBtn">Save Settings</button>
+    <button id="testBtn" style="background: #28a745; margin-left: 10px;">Test API Key</button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
+

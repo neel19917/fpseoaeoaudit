@@ -33,6 +33,80 @@ let currentSignals = null;
 let currentMetadata = null; // Store audit metadata
 let isKeyVisible = false;
 let auditLogs = []; // Store logs for this audit session
+let currentTabId = null; // Track current tab ID
+
+/**
+ * Logs an error with context
+ */
+function logPopupError(context, error, additionalInfo = {}) {
+  const errorLog = {
+    timestamp: new Date().toISOString(),
+    context,
+    message: error.message || error,
+    stack: error.stack,
+    ...additionalInfo
+  };
+  
+  console.error(`[Popup ERROR] ${context}:`, errorLog);
+  addLog(`ERROR in ${context}: ${error.message || error}`, 'error');
+  
+  return errorLog;
+}
+
+/**
+ * Checks the current audit state for this tab
+ */
+async function checkAuditState() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) return null;
+    
+    currentTabId = tab.id;
+    
+    const response = await chrome.runtime.sendMessage({ 
+      type: 'GET_AUDIT_STATE',
+      tabId: tab.id 
+    });
+    
+    if (response.success && response.state) {
+      console.log('[Popup] Current audit state:', response.state);
+      return response.state;
+    }
+    
+    return null;
+  } catch (error) {
+    logPopupError('checkAuditState', error);
+    return null;
+  }
+}
+
+/**
+ * Shows audit status indicator
+ */
+function showAuditStatus(state) {
+  if (!state || state.status === 'idle') return;
+  
+  const statusMessages = {
+    running: `⏳ Audit in progress... (started ${new Date(state.timestamp).toLocaleTimeString()})`,
+    complete: `✓ Audit completed (${((state.duration || 0) / 1000).toFixed(1)}s)`,
+    error: `✗ Audit failed: ${state.error || 'Unknown error'}`
+  };
+  
+  const message = statusMessages[state.status];
+  if (message) {
+    console.log('[Popup]', message);
+    
+    if (state.status === 'running') {
+      showLoading();
+      const loadingEl = document.querySelector('#loading p');
+      if (loadingEl) {
+        loadingEl.textContent = 'Audit running in background...';
+      }
+    } else if (state.status === 'error') {
+      showError(message);
+    }
+  }
+}
 
 /**
  * Adds a log entry to the audit logs
@@ -469,8 +543,12 @@ async function runAudit() {
   // Clear previous logs
   auditLogs = [];
   addLog('Starting SEO & AEO audit...');
+  
+  const startTime = Date.now();
 
   try {
+    console.log('[Popup] Starting audit at', new Date().toLocaleTimeString());
+    
     // Check if API key is configured (try sync first, fallback to local)
     let result = await chrome.storage.sync.get(['apiKey', 'model', 'verboseLogging']);
     if (!result.apiKey) {
@@ -478,8 +556,10 @@ async function runAudit() {
     }
     
     if (!result.apiKey) {
-      showError('API key not configured. Please set it in the options page first.');
+      const error = 'API key not configured. Please set it in the options page first.';
+      showError(error);
       addLog('ERROR: API key not configured', 'error');
+      logPopupError('runAudit', new Error(error));
       return;
     }
 
@@ -498,8 +578,10 @@ async function runAudit() {
     const signals = await getSignals();
     
     if (!signals || Object.keys(signals).length === 0) {
-      showError('No signals collected from page. Make sure you are on a valid HTML page.');
+      const error = 'No signals collected from page. Make sure you are on a valid HTML page.';
+      showError(error);
       addLog('ERROR: No signals collected', 'error');
+      logPopupError('runAudit', new Error(error));
       return;
     }
 
@@ -526,24 +608,35 @@ async function runAudit() {
     currentSignals = signals;
 
     // Send to background worker
-    addLog('Sending request to Claude AI...');
+    addLog('Sending request to Claude AI (this may take 30-60 seconds)...');
+    console.log('[Popup] Sending audit request to background worker...');
+    
     const response = await chrome.runtime.sendMessage({
       type: 'RUN_AUDIT',
-      signals: signals
+      signals: signals,
+      tabId: currentTabId
     });
 
     if (!response.success) {
-      showError(response.error || 'Audit failed');
-      addLog(`ERROR: ${response.error || 'Audit failed'}`, 'error');
+      const error = response.error || 'Audit failed';
+      showError(error);
+      addLog(`ERROR: ${error}`, 'error');
+      logPopupError('runAudit - API call failed', new Error(error), { 
+        url: signals.url,
+        duration: Date.now() - startTime 
+      });
       return;
     }
 
-    addLog('Claude AI analysis received');
+    const duration = Date.now() - startTime;
+    addLog(`Claude AI analysis received (${(duration/1000).toFixed(1)}s)`);
+    console.log(`[Popup] Audit completed in ${(duration/1000).toFixed(1)}s`);
     
     if (verboseLogging) {
       console.log('[Popup] Audit completed successfully');
       console.log('[Popup] Analysis length:', response.analysis.length, 'characters');
       addLog(`Analysis length: ${response.analysis.length} characters`, 'verbose');
+      addLog(`Total duration: ${(duration/1000).toFixed(1)}s`, 'verbose');
     }
 
     // Store metadata for download
@@ -552,6 +645,7 @@ async function runAudit() {
       title: signals.title,
       model: result.model || 'claude-sonnet-4-5-20250929',
       timestamp: new Date().toISOString(),
+      duration,
       wordCount: signals.wordCount,
       internalLinks: signals.linkCounts?.internal,
       externalLinks: signals.linkCounts?.external,
@@ -1311,5 +1405,42 @@ UI.closeLogsBtn.addEventListener('click', hideLogs);
   } else {
     console.log('[Popup] No previous audit to restore, showing initial state');
   }
+  
+  // Check current audit state for this tab
+  const state = await checkAuditState();
+  if (state) {
+    showAuditStatus(state);
+  }
 })();
 
+// Add a button to view last error for debugging
+const createErrorViewerButton = () => {
+  const btn = document.createElement('button');
+  btn.textContent = '🐛 Debug';
+  btn.className = 'icon-btn';
+  btn.title = 'View last error';
+  btn.style.cssText = 'position: absolute; top: 10px; left: 10px; opacity: 0.5;';
+  btn.onclick = async () => {
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'GET_LAST_ERROR' });
+      if (response.success && response.error) {
+        const errorTime = new Date(response.errorTime).toLocaleString();
+        const errorMsg = `Last Error (${errorTime}):\n\nContext: ${response.error.context}\nMessage: ${response.error.message}\n\nCheck console for full details.`;
+        alert(errorMsg);
+        console.log('[Popup] Last error:', response.error);
+      } else {
+        alert('No recent errors found');
+      }
+    } catch (error) {
+      alert('Failed to get last error: ' + error.message);
+    }
+  };
+  document.body.appendChild(btn);
+};
+
+// Add debug button in verbose mode
+chrome.storage.sync.get(['verboseLogging'], (result) => {
+  if (result.verboseLogging) {
+    createErrorViewerButton();
+  }
+});

@@ -11,6 +11,9 @@ const DEFAULT_TEMPERATURE = 0.5;
 // Verbose logging utility
 let verboseLoggingEnabled = false;
 
+// Audit state tracking
+const auditStates = new Map(); // tabId -> { status, startTime, url, error }
+
 // Load verbose logging setting
 chrome.storage.sync.get(['verboseLogging'], (result) => {
   verboseLoggingEnabled = result.verboseLogging || false;
@@ -33,6 +36,118 @@ chrome.storage.onChanged.addListener((changes, area) => {
 function vlog(...args) {
   if (verboseLoggingEnabled) {
     console.log('[SEO Auditor VERBOSE]', ...args);
+  }
+}
+
+/**
+ * Enhanced error logging with context
+ */
+function logError(context, error, additionalInfo = {}) {
+  const errorLog = {
+    timestamp: new Date().toISOString(),
+    context,
+    message: error.message || error,
+    stack: error.stack,
+    ...additionalInfo
+  };
+  
+  console.error(`[SEO Auditor ERROR] ${context}:`, errorLog);
+  
+  // Store last error for debugging
+  chrome.storage.local.set({ 
+    lastError: errorLog,
+    lastErrorTime: Date.now()
+  }).catch(e => console.error('[SEO Auditor] Failed to store error:', e));
+  
+  return errorLog;
+}
+
+/**
+ * Updates badge to show audit status
+ */
+function updateBadge(tabId, status, text = '') {
+  try {
+    const colors = {
+      running: '#4CAF50',
+      error: '#F44336',
+      complete: '#2196F3',
+      idle: '#9E9E9E'
+    };
+    
+    chrome.action.setBadgeBackgroundColor({ 
+      color: colors[status] || colors.idle,
+      tabId 
+    });
+    
+    chrome.action.setBadgeText({ 
+      text: text,
+      tabId 
+    });
+    
+    vlog(`Badge updated for tab ${tabId}: ${status} - ${text}`);
+  } catch (error) {
+    logError('updateBadge', error, { tabId, status, text });
+  }
+}
+
+/**
+ * Sets audit state for a tab
+ */
+function setAuditState(tabId, status, additionalData = {}) {
+  try {
+    const state = {
+      status,
+      timestamp: Date.now(),
+      ...additionalData
+    };
+    
+    auditStates.set(tabId, state);
+    
+    // Update badge based on status
+    const badgeText = {
+      running: '⏳',
+      complete: '✓',
+      error: '✗',
+      idle: ''
+    };
+    
+    updateBadge(tabId, status, badgeText[status] || '');
+    
+    // Store state in chrome.storage for persistence
+    chrome.storage.local.set({
+      [`auditState_${tabId}`]: state
+    }).catch(e => logError('setAuditState storage', e, { tabId }));
+    
+    console.log(`[SEO Auditor] Tab ${tabId} state: ${status}`, additionalData);
+    vlog('Audit state updated:', state);
+    
+  } catch (error) {
+    logError('setAuditState', error, { tabId, status, additionalData });
+  }
+}
+
+/**
+ * Gets audit state for a tab
+ */
+async function getAuditState(tabId) {
+  try {
+    // Try memory first
+    if (auditStates.has(tabId)) {
+      return auditStates.get(tabId);
+    }
+    
+    // Fall back to storage
+    const result = await chrome.storage.local.get([`auditState_${tabId}`]);
+    const state = result[`auditState_${tabId}`];
+    
+    if (state) {
+      auditStates.set(tabId, state);
+    }
+    
+    return state || { status: 'idle' };
+  } catch (error) {
+    logError('getAuditState', error, { tabId });
+    return { status: 'idle' };
   }
 }
 
@@ -801,8 +916,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'TEST_API_KEY') {
     // Run async test
     (async () => {
-      const result = await testAPIKey();
-      sendResponse(result);
+      try {
+        console.log('[SEO Auditor] Testing API key...');
+        const result = await testAPIKey();
+        console.log('[SEO Auditor] API key test result:', result.success ? 'SUCCESS' : 'FAILED');
+        if (!result.success) {
+          logError('API Key Test', new Error(result.error));
+        }
+        sendResponse(result);
+      } catch (error) {
+        const errorLog = logError('TEST_API_KEY handler', error);
+        sendResponse({
+          success: false,
+          error: `Test failed: ${error.message}`
+        });
+      }
     })();
     return true; // Keep channel open for async response
   }
@@ -810,7 +938,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'RUN_AUDIT') {
     // Run async operation
     (async () => {
+      const tabId = sender.tab?.id || message.tabId;
+      const startTime = Date.now();
+      
       try {
+        console.log(`[SEO Auditor] Starting audit for tab ${tabId}`);
+        
+        // Set initial state
+        setAuditState(tabId, 'running', { 
+          startTime,
+          url: message.signals?.url 
+        });
+        
         // Get API key and model from storage (try sync first, fallback to local)
         let result = await chrome.storage.sync.get(['apiKey', 'model']);
         
@@ -826,9 +965,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const model = result.model || DEFAULT_MODEL;
 
         if (!apiKey || apiKey.trim() === '') {
+          const error = 'API key not configured. Please set it in the options page.';
+          logError('RUN_AUDIT', new Error(error), { tabId });
+          setAuditState(tabId, 'error', { error });
           sendResponse({
             success: false,
-            error: 'API key not configured. Please set it in the options page.'
+            error
           });
           return;
         }
@@ -838,12 +980,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         // Log a safe version for debugging (never log full key)
         console.log('[SEO Auditor] API key found, length:', apiKey.length, 'prefix:', apiKey.substring(0, 7));
+        vlog('Model:', model, 'Verbose logging:', verboseLoggingEnabled);
         
         // Validate key format
         if (!apiKey.startsWith('sk-ant-')) {
+          const error = 'API key format appears incorrect. Expected to start with "sk-ant-". Please check your API key in the options page.';
+          logError('RUN_AUDIT', new Error(error), { tabId, keyPrefix: apiKey.substring(0, 7) });
+          setAuditState(tabId, 'error', { error });
           sendResponse({
             success: false,
-            error: 'API key format appears incorrect. Expected to start with "sk-ant-". Please check your API key in the options page.'
+            error
           });
           return;
         }
@@ -851,16 +997,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Get signals from the message
         const signals = message.signals;
         if (!signals) {
+          const error = 'No signals collected from page. Make sure you are on a valid HTML page.';
+          logError('RUN_AUDIT', new Error(error), { tabId });
+          setAuditState(tabId, 'error', { error });
           sendResponse({
             success: false,
-            error: 'No signals collected from page. Make sure you are on a valid HTML page.'
+            error
           });
           return;
         }
 
+        vlog('Starting API call with signals:', Object.keys(signals));
+        
         // Build prompt and call API
         const prompt = buildPrompt(signals);
         const analysis = await callClaudeAPI(apiKey, model, prompt);
+
+        const duration = Date.now() - startTime;
+        console.log(`[SEO Auditor] Audit completed for tab ${tabId} in ${(duration/1000).toFixed(1)}s`);
+        
+        // Mark as complete
+        setAuditState(tabId, 'complete', {
+          url: signals.url,
+          duration,
+          analysisLength: analysis.length
+        });
 
         sendResponse({
           success: true,
@@ -869,6 +1030,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
 
       } catch (error) {
+        const duration = Date.now() - startTime;
+        console.error(`[SEO Auditor] Audit failed for tab ${tabId} after ${(duration/1000).toFixed(1)}s`);
+        
+        logError('RUN_AUDIT execution', error, { 
+          tabId, 
+          duration,
+          url: message.signals?.url 
+        });
+        
+        setAuditState(tabId, 'error', { 
+          error: error.message,
+          duration 
+        });
+        
         sendResponse({
           success: false,
           error: error.message || 'Unknown error occurred'
@@ -879,5 +1054,67 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Return true to indicate async response
     return true;
   }
+  
+  if (message.type === 'GET_AUDIT_STATE') {
+    // Get current audit state for the tab
+    (async () => {
+      try {
+        const tabId = message.tabId || sender.tab?.id;
+        const state = await getAuditState(tabId);
+        sendResponse({ success: true, state });
+      } catch (error) {
+        logError('GET_AUDIT_STATE', error);
+        sendResponse({ success: false, error: error.message });
+      }
+    })();
+    return true;
+  }
+  
+  if (message.type === 'GET_LAST_ERROR') {
+    // Get last error for debugging
+    (async () => {
+      try {
+        const result = await chrome.storage.local.get(['lastError', 'lastErrorTime']);
+        sendResponse({ 
+          success: true, 
+          error: result.lastError,
+          errorTime: result.lastErrorTime
+        });
+      } catch (error) {
+        sendResponse({ success: false, error: error.message });
+      }
+    })();
+    return true;
+  }
 });
 
+// Listen for tab updates to restore badge state
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  try {
+    const state = await getAuditState(activeInfo.tabId);
+    if (state && state.status !== 'idle') {
+      const badgeText = {
+        running: '⏳',
+        complete: '✓',
+        error: '✗'
+      };
+      updateBadge(activeInfo.tabId, state.status, badgeText[state.status] || '');
+      vlog(`Restored badge for tab ${activeInfo.tabId}:`, state.status);
+    }
+  } catch (error) {
+    logError('Tab activation', error, { tabId: activeInfo.tabId });
+  }
+});
+
+// Clean up state when tabs are closed
+chrome.tabs.onRemoved.addListener((tabId) => {
+  try {
+    auditStates.delete(tabId);
+    chrome.storage.local.remove([`auditState_${tabId}`]);
+    vlog(`Cleaned up state for closed tab ${tabId}`);
+  } catch (error) {
+    logError('Tab cleanup', error, { tabId });
+  }
+});
+
+console.log('[SEO Auditor] Background worker initialized');

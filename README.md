@@ -36,6 +36,11 @@ A powerful Chrome extension for comprehensive SEO and Answer Engine Optimization
 - **Downloadable Reports**: Markdown reports with full metadata
 - **Linkable Results**: Share and reference audit results
 - **Copy with Metadata**: Copy results with URL and timestamp
+- **Background Audits**: Audits run even when popup is closed
+- **Badge Indicators**: Visual status on extension icon (⏳ running, ✓ complete, ✗ error)
+- **Error Logging**: Comprehensive error tracking for debugging
+- **Multi-Tab State**: Independent audit state for each tab
+- **Debug Mode**: View last error details with 🐛 button
 
 ## Installation
 
@@ -74,8 +79,26 @@ cd fpseoaeoaudit
 1. Navigate to any webpage you want to audit
 2. Click the extension icon
 3. Click "Run Audit"
-4. Wait for Claude AI to analyze the page
+4. Wait for Claude AI to analyze the page (15-30 seconds)
 5. Review the comprehensive SEO/AEO report
+
+**Pro Tip**: You can close the popup while the audit runs! The extension badge will show:
+- ⏳ (Green) = Audit in progress
+- ✓ (Blue) = Audit complete - reopen to view results
+- ✗ (Red) = Error occurred
+
+### Background Audits
+
+Audits run independently in the background:
+
+1. Start an audit on any page
+2. **Close the popup** (audit continues running)
+3. Browse other tabs or pages
+4. Check the extension badge for status
+5. Return to the tab when ✓ appears
+6. Reopen popup to view completed results
+
+Each tab maintains its own audit state!
 
 ### With Verbose Logging
 
@@ -83,6 +106,7 @@ cd fpseoaeoaudit
 2. Run an audit
 3. Click the 📝 logs button to view detailed process logs
 4. Check browser console (F12) for technical details
+5. Use 🐛 Debug button (top-left) to view last error
 
 ### Download Reports
 
@@ -92,6 +116,7 @@ cd fpseoaeoaudit
    - Full analysis
    - Page metadata
    - Audit statistics
+   - Duration and performance metrics
    - Timestamp and model used
 
 ## Configuration
@@ -105,8 +130,12 @@ cd fpseoaeoaudit
 ### Storage
 
 - **Last Audit**: Saved for 7 days in local storage
+- **Audit State**: Per-tab state tracking with persistence
+- **Error Logs**: Last error stored for debugging
 - **Settings**: Synced across devices via Chrome Sync Storage
 - **Audit History**: Last 5 audits tracked locally
+
+All data is stored locally in your browser.
 
 ## Privacy & Security
 
@@ -124,17 +153,20 @@ cd fpseoaeoaudit
 
 ```
 SEO:AEO Agent/
-├── manifest.json           # Extension manifest
-├── background.js          # Service worker
-├── popup.html            # Main popup UI
-├── popup.js              # Popup logic
-├── options.html          # Settings page
-├── options.js            # Settings logic
-├── contentScript.js      # Page signal collector
-├── styles.css            # Styles
-├── icons/                # Extension icons
-├── FEATURES.md           # Feature documentation
-└── STORAGE_FEATURE.md    # Storage implementation docs
+├── manifest.json              # Extension manifest
+├── background.js             # Service worker with state tracking
+├── popup.html               # Main popup UI
+├── popup.js                 # Popup logic with error handling
+├── options.html             # Settings page
+├── options.js               # Settings logic
+├── contentScript.js         # Page signal collector
+├── styles.css               # Styles
+├── icons/                   # Extension icons
+├── README.md                # This file
+├── FEATURES.md              # Feature documentation
+├── STORAGE_FEATURE.md       # Storage implementation docs
+├── ERROR_LOGGING_GUIDE.md   # Error logging & debugging guide
+└── TESTING_GUIDE.md         # Testing instructions
 ```
 
 ### Key Technologies
@@ -162,6 +194,7 @@ To test:
 - Check your API key in settings
 - Verify it starts with `sk-ant-`
 - Get a fresh key from [Anthropic Console](https://console.anthropic.com/)
+- Click "Test API Key" to verify
 
 **No Signals Collected**
 - Can't audit `chrome://` pages
@@ -170,22 +203,41 @@ To test:
 
 **Extension Not Loading**
 - Reload extension at `chrome://extensions/`
-- Check browser console for errors
+- Check browser console for errors (F12)
 - Verify all files are present
+- Look for service worker errors
 
 **Results Not Persisting**
 - Check browser storage isn't full
 - Verify extension has storage permissions
 - Results expire after 7 days
+- Check chrome.storage in DevTools
+
+**Badge Not Showing**
+- Reload the extension
+- Check if audit actually started
+- Look for errors in console
+
+### Debugging with Error Logs
+
+1. Enable verbose logging in settings
+2. Run an audit that fails
+3. Click 🐛 Debug button in popup (top-left corner)
+4. View error details with timestamp and context
+5. Check browser console (F12) for full stack trace
+6. Review `ERROR_LOGGING_GUIDE.md` for detailed debugging steps
 
 ### Enable Verbose Logging
 
-1. Go to extension settings
+1. Go to extension settings (⚙️ icon)
 2. Check "Enable Verbose Logging"
 3. Save settings
 4. Run audit
-5. Click 📝 to view logs
-6. Check browser console (F12) for technical details
+5. Click 📝 to view detailed logs
+6. Check browser console (F12) for `[SEO Auditor VERBOSE]` messages
+
+For comprehensive debugging guide, see `ERROR_LOGGING_GUIDE.md`.
+For testing procedures, see `TESTING_GUIDE.md`.
 
 ## API Costs
 
@@ -237,7 +289,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/neel19917/fpseoaeoaudit/issues)
-- **Documentation**: See `FEATURES.md` for detailed feature documentation
+- **Documentation**: 
+  - `FEATURES.md` - Detailed feature documentation
+  - `ERROR_LOGGING_GUIDE.md` - Debugging and error logging
+  - `TESTING_GUIDE.md` - Testing procedures
+  - `STORAGE_FEATURE.md` - Storage implementation
 - **API Documentation**: [Anthropic Claude API Docs](https://docs.anthropic.com/)
 
 ## Acknowledgments
@@ -248,10 +304,21 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Version History
 
-### v1.1.0 (Current)
-- Added Supabase cloud sync support (in progress)
-- Updated to latest Claude models
-- Enhanced manifest for cloud features
+### v1.2.0 (Current)
+- ✅ Comprehensive error logging with context and storage
+- ✅ Background audit state tracking per tab
+- ✅ Extension badge indicators (⏳ ✓ ✗)
+- ✅ Audits persist when popup is closed
+- ✅ Debug mode with 🐛 button to view last error
+- ✅ Multi-tab state management
+- ✅ Duration tracking and performance metrics
+- ✅ Enhanced console logging
+
+### v1.1.0
+- Added latest Claude 4 models support
+- Updated to claude-sonnet-4-5 as default
+- Enhanced manifest structure
+- Improved error handling
 
 ### v1.0.0
 - Initial release

@@ -86,32 +86,78 @@ ${signals.bodyTextSample || '(no text content found)'}
 
 ---
 
-Provide DEEP, ACTIONABLE analysis in this format. Be specific, detailed, and provide exact implementation steps:
+Provide DEEP, ACTIONABLE analysis in CHECKLIST FORMAT for easy team collaboration. Use markdown checkboxes (- [ ]) for all actionable items. Be specific, detailed, and provide exact implementation steps:
 
-## CRITICAL ISSUES (Immediate Action Required)
-List 3-5 critical problems that are severely impacting SEO/AEO performance:
-- **Issue**: [Specific problem]
-- **Impact**: [Exact SEO/AEO consequence with metrics if possible]
-- **Fix**: [Step-by-step implementation with code examples]
-- **Priority**: [High/Critical]
-- **Estimated Impact**: [Expected improvement]
+## ⚠️ CRITICAL ISSUES (Immediate Action Required)
+List 3-5 critical problems with checkboxes for team tracking:
 
-## TOP 10 PRIORITIZED RECOMMENDATIONS
-For each recommendation, provide:
-1. **What**: [Specific issue found]
-2. **Why It Matters**: [SEO/AEO impact with data/reasoning]
-3. **How to Fix**: [Detailed, step-by-step instructions with examples]
-4. **Before/After Example**: [Show what to change]
-5. **Priority**: [Critical/High/Medium]
-6. **Estimated Effort**: [Time/complexity]
-7. **Expected Result**: [Traffic/ranking improvement potential]
+### Issue 1: [Issue Name]
+- [ ] **Problem Identified**: [Specific problem]
+- [ ] **Impact**: [Exact SEO/AEO consequence with metrics]
+- [ ] **Fix Step 1**: [First implementation step with code]
+- [ ] **Fix Step 2**: [Second implementation step]
+- [ ] **Fix Step 3**: [Final step]
+- [ ] **Verify Fix**: [How to confirm it's fixed]
+**Priority**: 🔴 Critical | **Estimated Impact**: [Expected improvement]
 
-## TITLE & META DESCRIPTION DEEP DIVE
-- **Current Title Analysis**: [Character count, keyword placement, CTR potential, emotional triggers]
-- **Recommended Title**: [Provide 3 optimized alternatives with reasoning]
-- **Current Meta Analysis**: [Character count, call-to-action, value proposition]
-- **Recommended Meta**: [Provide 3 optimized alternatives]
-- **Click-Through Rate Optimization**: [Specific tactics to improve CTR]
+(Repeat for each critical issue)
+
+## 🎯 TOP 10 PRIORITIZED RECOMMENDATIONS
+
+### Recommendation #1: [Title]
+- [ ] **Issue**: [Specific problem found]
+- [ ] **Why It Matters**: [SEO/AEO impact with data]
+- [ ] **Implementation Steps**:
+  - [ ] Step 1: [Detailed instruction]
+  - [ ] Step 2: [Next step]
+  - [ ] Step 3: [Final step]
+- [ ] **Before/After Example**:
+  ```
+  Before: [current state]
+  After: [improved state]
+  ```
+- [ ] **Test & Verify**: [How to confirm success]
+
+**Priority**: 🔴 Critical / 🟡 High / 🟢 Medium | **Effort**: [time] | **Impact**: [expected result]
+
+---
+
+(Repeat for all 10 recommendations)
+
+## 📝 TITLE & META DESCRIPTION DEEP DIVE
+
+### Current Title Analysis
+- [ ] **Review current title**: [Current title here]
+- [ ] Character count: [X chars] (Optimal: 50-60)
+- [ ] Keyword placement: [Analysis]
+- [ ] CTR potential: [Rating]
+
+### Title Optimization Tasks
+- [ ] **Option 1**: [New title suggestion with reasoning]
+- [ ] **Option 2**: [Alternative title with reasoning]
+- [ ] **Option 3**: [Third alternative with reasoning]
+- [ ] **Select best option** and implement
+- [ ] **Test in SERP simulator**
+
+### Current Meta Description Analysis
+- [ ] **Review current meta**: [Current meta here]
+- [ ] Character count: [X chars] (Optimal: 150-160)
+- [ ] Call-to-action present: [Yes/No]
+- [ ] Value proposition: [Analysis]
+
+### Meta Description Tasks
+- [ ] **Option 1**: [New meta suggestion]
+- [ ] **Option 2**: [Alternative meta]
+- [ ] **Option 3**: [Third alternative]
+- [ ] **Implement selected option**
+- [ ] **Add UTM parameters** if needed
+
+### CTR Optimization Checklist
+- [ ] Add power words: [specific words to use]
+- [ ] Include numbers/statistics
+- [ ] Add emotional trigger
+- [ ] Include target keyword
+- [ ] Create urgency or curiosity
 
 ## CONTENT STRATEGY & OPTIMIZATION
 - **Content Quality Score**: [0-100 with breakdown]
@@ -139,18 +185,26 @@ For each recommendation, provide:
 - **AI Overview Strategy**: [How to optimize for Google's AI Overviews]
 - **Answer Box Tactics**: [Specific formatting for answer boxes]
 
-## SCHEMA MARKUP DEEP IMPLEMENTATION
-For each recommended schema type, provide:
-- **Schema Type**: [Specific type needed]
-- **Why**: [SEO benefit and rich result potential]
-- **Complete JSON-LD Code**: [Full, ready-to-use implementation]
-- **Key Properties**: [Essential properties to include]
-- **Testing**: [How to validate with Google's tools]
-- **Nested Schemas**: [Additional schemas to nest within]
+## 🏗️ SCHEMA MARKUP IMPLEMENTATION CHECKLIST
 
-Specific schemas to implement:
-${signals.structuredData.length > 0 ? 'Improve existing schemas:' : 'Add these essential schemas:'}
-[Provide 3-5 complete schema implementations]
+${signals.structuredData.length > 0 ? '### Existing Schema Improvements' : '### New Schema Implementation'}
+
+### Schema #1: [Schema Type]
+- [ ] **Understand the benefit**: [SEO benefit and rich result potential]
+- [ ] **Copy this code** and paste in <head>:
+\`\`\`json
+[Complete JSON-LD code here]
+\`\`\`
+- [ ] **Customize these properties**:
+  - [ ] Property 1: [Update this value]
+  - [ ] Property 2: [Update this value]
+  - [ ] Property 3: [Update this value]
+- [ ] **Test with Google Rich Results Tool**: https://search.google.com/test/rich-results
+- [ ] **Validate with Schema.org validator**: https://validator.schema.org/
+- [ ] **Check Search Console** for rich result appearance
+- [ ] **Add nested schemas if needed**: [List of additional schemas]
+
+(Provide 3-5 complete schema implementations with checkboxes)
 
 ## INTERNAL LINKING STRATEGY
 - **Current Link Analysis**: [Link equity flow, anchor text diversity]
@@ -161,16 +215,40 @@ ${signals.structuredData.length > 0 ? 'Improve existing schemas:' : 'Add these e
 - **Orphan Page Risk**: [Analysis of page isolation]
 - **Link Architecture**: [Site structure improvements]
 
-## IMAGE OPTIMIZATION MASTERPLAN
-For each image issue:
-- **Problem**: [Specific issue found]
-- **SEO Impact**: [How it affects rankings/performance]
-- **Fix**: [Exact alt text to add, file optimization steps]
-- **Recommended Alt Text**: [Provide specific alt text examples]
-- **File Name Optimization**: [How to rename images]
-- **Next-Gen Formats**: [WebP, AVIF recommendations]
-- **Lazy Loading**: [Implementation guidance]
-- **Image Sitemap**: [Whether to add images to sitemap]
+## 🖼️ IMAGE OPTIMIZATION CHECKLIST
+
+### Missing Alt Text (${signals.imageStats?.withoutAlt || 0} images)
+${signals.imageStats?.missingAltExamples?.slice(0, 5).map((img, i) => `
+#### Image ${i + 1}: ${img.src.substring(0, 50)}...
+- [ ] **Add alt text**: "[Suggested descriptive alt text]"
+- [ ] **Rename file**: from [current] to [optimized-keyword-name.jpg]
+- [ ] **Verify accessibility**: Screen reader test
+`).join('\n') || '- [ ] No images missing alt text ✓'}
+
+### Image Optimization Tasks
+- [ ] **Compress all images**:
+  - [ ] Use TinyPNG or ImageOptim
+  - [ ] Target: <100KB per image
+  - [ ] Maintain quality at 80-85%
+  
+- [ ] **Convert to Next-Gen Formats**:
+  - [ ] Convert to WebP format
+  - [ ] Provide fallback for older browsers
+  - [ ] Consider AVIF for better compression
+  
+- [ ] **Implement Lazy Loading**:
+  - [ ] Add \`loading="lazy"\` attribute to images
+  - [ ] Exclude above-the-fold images
+  - [ ] Test on mobile devices
+  
+- [ ] **Optimize File Names**:
+  - [ ] Image 1: Rename to [descriptive-keyword-name.jpg]
+  - [ ] Image 2: Rename to [descriptive-keyword-name.jpg]
+  - [ ] Use hyphens, not underscores
+  
+- [ ] **Add to Image Sitemap**: [Yes/No with reasoning]
+- [ ] **Set proper dimensions** in HTML (width/height attributes)
+- [ ] **Use responsive images** with srcset attribute
 
 ## EXTERNAL LINK AUDIT
 - **Link Quality Assessment**: [Evaluate authority of outbound links]
@@ -234,11 +312,30 @@ Based on the content and structure:
 - **Bard/Gemini Alignment**: [Google AI alignment tactics]
 - **AI Training Data**: [Make content valuable for AI training]
 
-## QUICK WINS (Can Implement in <1 Hour)
-List 10+ immediate improvements with exact instructions:
-1. [Specific action with implementation code/steps]
-2. [Next quick win]
-...
+## ⚡ QUICK WINS (Implement Today - <1 Hour Each)
+
+### Immediate Actions Checklist
+- [ ] **Quick Win #1**: [Action title]
+  - Implementation: [Exact code or steps]
+  - Time: [X minutes]
+  
+- [ ] **Quick Win #2**: [Action title]
+  - Implementation: [Exact code or steps]
+  - Time: [X minutes]
+  
+- [ ] **Quick Win #3**: [Action title]
+  - Implementation: [Exact code or steps]
+  - Time: [X minutes]
+  
+- [ ] **Quick Win #4**: [Action title]
+  - Implementation: [Exact code or steps]
+  - Time: [X minutes]
+  
+- [ ] **Quick Win #5**: [Action title]
+  - Implementation: [Exact code or steps]
+  - Time: [X minutes]
+
+(Continue for 10+ quick wins with checkboxes and exact steps)
 
 ## LONG-TERM STRATEGY (30-90 Days)
 - **Content Expansion Plan**: [Detailed roadmap]
@@ -263,23 +360,68 @@ List 10+ immediate improvements with exact instructions:
 
 **Scoring Breakdown**: [Explain each score component]
 
-## IMPLEMENTATION PRIORITY MATRIX
-**Critical (Do First)**:
-- [Action 1]
-- [Action 2]
+## 📋 IMPLEMENTATION PRIORITY MATRIX
 
-**High Priority (This Week)**:
-- [Action 3]
-- [Action 4]
+### 🔴 CRITICAL - Do First (This Week)
+- [ ] **Task 1**: [Action] - Effort: [time] - Impact: [high/critical]
+- [ ] **Task 2**: [Action] - Effort: [time] - Impact: [high/critical]
+- [ ] **Task 3**: [Action] - Effort: [time] - Impact: [high/critical]
 
-**Medium Priority (This Month)**:
-- [Action 5]
-- [Action 6]
+**Team Assignment**: [Suggest who should handle]
+**Deadline**: [Recommended completion date]
 
-**Low Priority (Future)**:
-- [Action 7]
+---
 
-Be extremely detailed, specific, and actionable. Provide code examples, exact wording, and step-by-step instructions. Think like an expert SEO consultant delivering a $5,000 audit.`;
+### 🟡 HIGH PRIORITY - This Week
+- [ ] **Task 1**: [Action] - Effort: [time] - Impact: [high]
+- [ ] **Task 2**: [Action] - Effort: [time] - Impact: [high]
+- [ ] **Task 3**: [Action] - Effort: [time] - Impact: [high]
+- [ ] **Task 4**: [Action] - Effort: [time] - Impact: [high]
+
+**Team Assignment**: [Suggest who should handle]
+**Deadline**: [Recommended completion date]
+
+---
+
+### 🟢 MEDIUM PRIORITY - This Month
+- [ ] **Task 1**: [Action] - Effort: [time] - Impact: [medium]
+- [ ] **Task 2**: [Action] - Effort: [time] - Impact: [medium]
+- [ ] **Task 3**: [Action] - Effort: [time] - Impact: [medium]
+- [ ] **Task 4**: [Action] - Effort: [time] - Impact: [medium]
+
+**Team Assignment**: [Suggest who should handle]
+**Deadline**: [Recommended completion date]
+
+---
+
+### ⚪ LOW PRIORITY - Future/Ongoing
+- [ ] **Task 1**: [Action] - Effort: [time] - Impact: [low/ongoing]
+- [ ] **Task 2**: [Action] - Effort: [time] - Impact: [low/ongoing]
+- [ ] **Task 3**: [Action] - Effort: [time] - Impact: [low/ongoing]
+
+**Team Assignment**: [Suggest who should handle]
+**Review Date**: [When to revisit]
+
+## 👥 TEAM COLLABORATION NOTES
+
+### Assignments & Responsibilities
+- [ ] **Developer Tasks**: [List technical implementations]
+- [ ] **Content Team Tasks**: [List content updates needed]
+- [ ] **Marketing Team Tasks**: [List promotional activities]
+- [ ] **Design Team Tasks**: [List visual/UX improvements]
+
+### Review & Sign-off
+- [ ] **Technical Review Complete**: [Assigned to]
+- [ ] **Content Review Complete**: [Assigned to]
+- [ ] **Final QA Testing**: [Assigned to]
+- [ ] **Live Deployment**: [Assigned to]
+- [ ] **Post-Launch Monitoring**: [Assigned to - First 7 days]
+
+---
+
+**FORMATTING NOTE**: Use markdown checkbox syntax (- [ ]) for all actionable items. This makes it easy to share in GitHub, Notion, Trello, or any markdown-compatible tool. Team members can check off items as they complete them.
+
+Be extremely detailed, specific, and actionable. Provide code examples, exact wording, and step-by-step instructions. Think like an expert SEO consultant delivering a $5,000 audit that a TEAM can execute together using this checklist.`;
 
   return prompt;
 }

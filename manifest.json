@@ -2,17 +2,15 @@
   "manifest_version": 3,
   "name": "SEO & AEO Auditor (Claude)",
   "version": "1.1.0",
-  "description": "One-click SEO and Answer Engine Optimization audits using Claude AI with cloud sync",
+  "description": "One-click SEO and Answer Engine Optimization audits using Claude AI",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage",
-    "alarms"
+    "storage"
   ],
   "host_permissions": [
     "<all_urls>",
-    "https://api.anthropic.com/*",
-    "https://*.supabase.co/*"
+    "https://api.anthropic.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -39,13 +37,7 @@
     "128": "icons/icon128.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self' https://cdn.jsdelivr.net; object-src 'self'"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["shared-view.html", "auth.html"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
 

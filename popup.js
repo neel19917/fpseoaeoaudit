@@ -1397,19 +1397,62 @@ UI.closeLogsBtn.addEventListener('click', hideLogs);
 (async function init() {
   console.log('[Popup] Initializing...');
   
+  // Check current audit state for this tab
+  const state = await checkAuditState();
+  console.log('[Popup] Current audit state:', state);
+  
+  // Check if state is stale (running for more than 5 minutes)
+  if (state && state.status === 'running') {
+    const age = Date.now() - state.timestamp;
+    const maxAge = 5 * 60 * 1000; // 5 minutes
+    if (age > maxAge) {
+      console.warn('[Popup] Audit state is stale (older than 5 minutes), clearing it');
+      // Clear stale state
+      try {
+        await chrome.storage.local.remove([`auditState_${currentTabId}`]);
+      } catch (e) {
+        console.error('[Popup] Failed to clear stale state:', e);
+      }
+      // Treat as if there's no state
+      state.status = 'idle';
+    }
+  }
+  
   // Try to load last audit from storage
   const loaded = await loadLastAudit();
   
   if (loaded) {
     console.log('[Popup] Restored previous audit results');
+    // If we have results, don't show loading state even if state says "running"
+    // (the state might be stale)
+  } else if (state && state.status === 'running') {
+    // Only show "running" state if we DON'T have saved results
+    console.log('[Popup] No saved results, but audit is running in background');
+    showLoading();
+    const loadingEl = document.querySelector('#loading p');
+    if (loadingEl) {
+      loadingEl.innerHTML = 'Audit running in background...<br><small style="margin-top:10px; display:block;"><a href="#" id="clearStateLink" style="color: #666;">Stuck? Click here to reset</a></small>';
+      const clearLink = document.getElementById('clearStateLink');
+      if (clearLink) {
+        clearLink.onclick = async (e) => {
+          e.preventDefault();
+          console.log('[Popup] User requested to clear stuck state');
+          try {
+            await chrome.storage.local.remove([`auditState_${currentTabId}`]);
+            location.reload();
+          } catch (error) {
+            console.error('[Popup] Failed to clear state:', error);
+            alert('Failed to clear state: ' + error.message);
+          }
+        };
+      }
+    }
+  } else if (state && state.status === 'error') {
+    // Show error state
+    console.log('[Popup] Previous audit had an error');
+    showError(state.error || 'Previous audit failed. Please try again.');
   } else {
     console.log('[Popup] No previous audit to restore, showing initial state');
-  }
-  
-  // Check current audit state for this tab
-  const state = await checkAuditState();
-  if (state) {
-    showAuditStatus(state);
   }
 })();
 

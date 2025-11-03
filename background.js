@@ -6,7 +6,7 @@
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
 const DEFAULT_MAX_TOKENS = 8000;
-const DEFAULT_TEMPERATURE = 0.3;
+const DEFAULT_TEMPERATURE = 0.5;
 
 // Verbose logging utility
 let verboseLoggingEnabled = false;
@@ -40,7 +40,19 @@ function vlog(...args) {
  * Builds the prompt sent to Claude based on collected signals.
  */
 function buildPrompt(signals) {
-  const prompt = `You are conducting a DEEP, COMPREHENSIVE SEO and AEO (Answer Engine Optimization) audit. Provide highly actionable, specific recommendations with implementation details. Go beyond surface-level analysis.
+  const prompt = `You are conducting a DEEP, COMPREHENSIVE SEO and AEO (Answer Engine Optimization) audit. 
+
+INSTRUCTIONS:
+1. Think deeply and analytically about each aspect before providing recommendations
+2. Consider multiple perspectives and edge cases
+3. Reason through your recommendations step-by-step
+4. Provide highly actionable, specific recommendations with implementation details
+5. Go beyond surface-level analysis - dig into the WHY behind each issue
+6. Connect different SEO factors to show how they impact each other
+7. Consider the broader context of the website and industry
+8. Think about user behavior and search intent throughout your analysis
+
+Take your time to analyze thoroughly. Quality and depth are more important than speed.
 
 URL: ${signals.url}
 Title: ${signals.title || '(missing)'}
@@ -86,78 +98,139 @@ ${signals.bodyTextSample || '(no text content found)'}
 
 ---
 
-Provide DEEP, ACTIONABLE analysis in CHECKLIST FORMAT for easy team collaboration. Use markdown checkboxes (- [ ]) for all actionable items. Be specific, detailed, and provide exact implementation steps:
+Provide DEEP, ACTIONABLE analysis in CHECKLIST FORMAT for easy team collaboration. Use markdown checkboxes (- [ ]) for all actionable items. 
 
-## ⚠️ CRITICAL ISSUES (Immediate Action Required)
-List 3-5 critical problems with checkboxes for team tracking:
+ANALYSIS APPROACH:
+- First, analyze the data holistically to understand the site's current state
+- Identify patterns and interconnections between different SEO factors
+- Consider the competitive landscape and user intent
+- Think through the reasoning behind each recommendation
+- Provide detailed explanations of WHY each change matters
+- Show your analytical reasoning for complex issues
+
+Be specific, detailed, and provide exact implementation steps:
+
+## CRITICAL ISSUES (Immediate Action Required)
+List 3-5 critical problems with checkboxes for team tracking.
+
+For each issue, first ANALYZE why this is critical:
+- What patterns in the data reveal this issue?
+- What are the cascading effects on other SEO factors?
+- What's the root cause, not just the symptom?
+
+Then provide actionable steps:
 
 ### Issue 1: [Issue Name]
+**Analysis & Reasoning**:
+[Detailed explanation of why this is critical, how you identified it, and its broader impact on the site's SEO performance. Show your thinking process.]
+
 - [ ] **Problem Identified**: [Specific problem]
 - [ ] **Impact**: [Exact SEO/AEO consequence with metrics]
+- [ ] **Root Cause**: [Why this problem exists]
 - [ ] **Fix Step 1**: [First implementation step with code]
 - [ ] **Fix Step 2**: [Second implementation step]
 - [ ] **Fix Step 3**: [Final step]
 - [ ] **Verify Fix**: [How to confirm it's fixed]
-**Priority**: 🔴 Critical | **Estimated Impact**: [Expected improvement]
+**Priority**: CRITICAL | **Estimated Impact**: [Expected improvement]
 
-(Repeat for each critical issue)
+(Repeat for each critical issue with deep analysis)
 
-## 🎯 TOP 10 PRIORITIZED RECOMMENDATIONS
+## TOP 10 PRIORITIZED RECOMMENDATIONS
+
+For each recommendation, show your analytical reasoning before providing the checklist:
 
 ### Recommendation #1: [Title]
+
+**Deep Analysis**:
+[Explain your thought process: What data points led you to this recommendation? How does this connect to other issues? What are the second-order effects? Consider user behavior, search intent, and competitive factors.]
+
 - [ ] **Issue**: [Specific problem found]
-- [ ] **Why It Matters**: [SEO/AEO impact with data]
+- [ ] **Why It Matters**: [SEO/AEO impact with data and reasoning]
+- [ ] **Connected Issues**: [How this relates to other problems]
 - [ ] **Implementation Steps**:
-  - [ ] Step 1: [Detailed instruction]
-  - [ ] Step 2: [Next step]
-  - [ ] Step 3: [Final step]
+  - [ ] Step 1: [Detailed instruction with reasoning]
+  - [ ] Step 2: [Next step with explanation]
+  - [ ] Step 3: [Final step with verification]
 - [ ] **Before/After Example**:
   ```
   Before: [current state]
   After: [improved state]
+  Reasoning: [Why this change works]
   ```
 - [ ] **Test & Verify**: [How to confirm success]
+- [ ] **Monitor**: [Metrics to track post-implementation]
 
-**Priority**: 🔴 Critical / 🟡 High / 🟢 Medium | **Effort**: [time] | **Impact**: [expected result]
+**Priority**: CRITICAL / HIGH / MEDIUM | **Effort**: [time] | **Impact**: [expected result]
 
 ---
 
-(Repeat for all 10 recommendations)
+(Repeat for all 10 recommendations with deep analysis for each)
 
-## 📝 TITLE & META DESCRIPTION DEEP DIVE
+## TITLE & META DESCRIPTION DEEP DIVE
+
+**Analytical Framework**:
+Before providing recommendations, analyze:
+- Current positioning and messaging strategy
+- Keyword relevance and search intent alignment
+- Competitive differentiation in SERPs
+- Psychological triggers and user motivation
+- Brand voice and consistency
 
 ### Current Title Analysis
 - [ ] **Review current title**: [Current title here]
 - [ ] Character count: [X chars] (Optimal: 50-60)
-- [ ] Keyword placement: [Analysis]
-- [ ] CTR potential: [Rating]
+- [ ] Keyword placement: [Analysis with reasoning]
+- [ ] CTR potential: [Rating with explanation]
+- [ ] Emotional appeal: [Assessment]
+- [ ] Competitive positioning: [How it compares]
+
+**Reasoning**: [Detailed analysis of strengths and weaknesses]
 
 ### Title Optimization Tasks
-- [ ] **Option 1**: [New title suggestion with reasoning]
-- [ ] **Option 2**: [Alternative title with reasoning]
-- [ ] **Option 3**: [Third alternative with reasoning]
-- [ ] **Select best option** and implement
+- [ ] **Option 1**: [New title suggestion]
+  - Reasoning: [Why this works - keyword placement, user intent, differentiation]
+  - Expected CTR impact: [Percentage]
+  
+- [ ] **Option 2**: [Alternative title]
+  - Reasoning: [Different approach and why it might work better]
+  - Expected CTR impact: [Percentage]
+  
+- [ ] **Option 3**: [Third alternative]
+  - Reasoning: [Yet another angle with specific benefits]
+  - Expected CTR impact: [Percentage]
+  
+- [ ] **A/B Testing Strategy**: [How to test these variations]
+- [ ] **Select best option** based on: [Decision criteria]
 - [ ] **Test in SERP simulator**
 
 ### Current Meta Description Analysis
 - [ ] **Review current meta**: [Current meta here]
 - [ ] Character count: [X chars] (Optimal: 150-160)
-- [ ] Call-to-action present: [Yes/No]
-- [ ] Value proposition: [Analysis]
+- [ ] Call-to-action present: [Yes/No with effectiveness rating]
+- [ ] Value proposition clarity: [Analysis]
+- [ ] Emotional resonance: [Assessment]
+
+**Reasoning**: [Detailed analysis of messaging effectiveness]
 
 ### Meta Description Tasks
 - [ ] **Option 1**: [New meta suggestion]
+  - Reasoning: [Why this messaging works for the target audience]
+  
 - [ ] **Option 2**: [Alternative meta]
+  - Reasoning: [Different value proposition angle]
+  
 - [ ] **Option 3**: [Third alternative]
+  - Reasoning: [Another approach with specific benefits]
+  
 - [ ] **Implement selected option**
 - [ ] **Add UTM parameters** if needed
 
 ### CTR Optimization Checklist
-- [ ] Add power words: [specific words to use]
-- [ ] Include numbers/statistics
-- [ ] Add emotional trigger
-- [ ] Include target keyword
-- [ ] Create urgency or curiosity
+- [ ] Add power words: [specific words with psychological impact explained]
+- [ ] Include numbers/statistics: [Why specificity increases trust]
+- [ ] Add emotional trigger: [Which emotion and why]
+- [ ] Include target keyword: [Natural placement strategy]
+- [ ] Create urgency or curiosity: [Technique and reasoning]
 
 ## CONTENT STRATEGY & OPTIMIZATION
 - **Content Quality Score**: [0-100 with breakdown]
@@ -185,26 +258,35 @@ List 3-5 critical problems with checkboxes for team tracking:
 - **AI Overview Strategy**: [How to optimize for Google's AI Overviews]
 - **Answer Box Tactics**: [Specific formatting for answer boxes]
 
-## 🏗️ SCHEMA MARKUP IMPLEMENTATION CHECKLIST
+## SCHEMA MARKUP IMPLEMENTATION CHECKLIST
+
+**Strategic Thinking**:
+[Analyze which schema types would have the most impact for this specific content type and business model. Consider rich result eligibility, competitive advantage, and implementation complexity.]
 
 ${signals.structuredData.length > 0 ? '### Existing Schema Improvements' : '### New Schema Implementation'}
 
 ### Schema #1: [Schema Type]
-- [ ] **Understand the benefit**: [SEO benefit and rich result potential]
+
+**Why This Schema**:
+[Deep analysis: Why this specific schema type is critical for this page. What rich results it enables. How it differentiates in SERPs. Expected impact on CTR and visibility.]
+
+- [ ] **Understand the benefit**: [SEO benefit and rich result potential with data]
 - [ ] **Copy this code** and paste in <head>:
 \`\`\`json
-[Complete JSON-LD code here]
+[Complete, production-ready JSON-LD code here]
 \`\`\`
 - [ ] **Customize these properties**:
-  - [ ] Property 1: [Update this value]
-  - [ ] Property 2: [Update this value]
-  - [ ] Property 3: [Update this value]
+  - [ ] Property 1: [Update this value - why it matters]
+  - [ ] Property 2: [Update this value - impact on rich results]
+  - [ ] Property 3: [Update this value - SEO benefit]
 - [ ] **Test with Google Rich Results Tool**: https://search.google.com/test/rich-results
 - [ ] **Validate with Schema.org validator**: https://validator.schema.org/
-- [ ] **Check Search Console** for rich result appearance
-- [ ] **Add nested schemas if needed**: [List of additional schemas]
+- [ ] **Check Search Console** for rich result appearance (7-14 days)
+- [ ] **Add nested schemas if needed**: [List with reasoning]
 
-(Provide 3-5 complete schema implementations with checkboxes)
+**Expected Results**: [Specific rich result types and estimated CTR impact]
+
+(Provide 3-5 complete schema implementations with deep analysis for each)
 
 ## INTERNAL LINKING STRATEGY
 - **Current Link Analysis**: [Link equity flow, anchor text diversity]
@@ -215,40 +297,60 @@ ${signals.structuredData.length > 0 ? '### Existing Schema Improvements' : '### 
 - **Orphan Page Risk**: [Analysis of page isolation]
 - **Link Architecture**: [Site structure improvements]
 
-## 🖼️ IMAGE OPTIMIZATION CHECKLIST
+## IMAGE OPTIMIZATION CHECKLIST
+
+**Strategic Analysis**:
+[Analyze the role of images in this content. Consider user experience, page speed impact, SEO value, and accessibility. Think about mobile vs desktop usage patterns.]
 
 ### Missing Alt Text (${signals.imageStats?.withoutAlt || 0} images)
 ${signals.imageStats?.missingAltExamples?.slice(0, 5).map((img, i) => `
 #### Image ${i + 1}: ${img.src.substring(0, 50)}...
-- [ ] **Add alt text**: "[Suggested descriptive alt text]"
+
+**Context Analysis**: [What this image likely depicts based on URL/page context]
+
+- [ ] **Add alt text**: "[Suggested descriptive, keyword-rich alt text]"
+  - Reasoning: [Why this alt text works - descriptive, accessible, SEO-friendly]
 - [ ] **Rename file**: from [current] to [optimized-keyword-name.jpg]
+  - SEO benefit: [How filename impacts image search ranking]
 - [ ] **Verify accessibility**: Screen reader test
-`).join('\n') || '- [ ] No images missing alt text ✓'}
+`).join('\n') || '- [ ] No images missing alt text - EXCELLENT'}
 
 ### Image Optimization Tasks
+
+**Performance vs Quality Tradeoff Analysis**:
+[Consider the balance between file size reduction and visual quality for this specific use case]
+
 - [ ] **Compress all images**:
   - [ ] Use TinyPNG or ImageOptim
-  - [ ] Target: <100KB per image
+  - [ ] Target: <100KB per image (<50KB for mobile)
   - [ ] Maintain quality at 80-85%
+  - [ ] Priority images: [List images that impact LCP]
+  - **Reasoning**: [Impact on Core Web Vitals and page speed]
   
 - [ ] **Convert to Next-Gen Formats**:
-  - [ ] Convert to WebP format
+  - [ ] Convert to WebP format (80% smaller files)
   - [ ] Provide fallback for older browsers
-  - [ ] Consider AVIF for better compression
+  - [ ] Consider AVIF for even better compression
+  - [ ] Test browser support: [Target browser versions]
+  - **Reasoning**: [File size reduction impact on performance score]
   
 - [ ] **Implement Lazy Loading**:
-  - [ ] Add \`loading="lazy"\` attribute to images
-  - [ ] Exclude above-the-fold images
-  - [ ] Test on mobile devices
+  - [ ] Add \`loading="lazy"\` attribute to below-fold images
+  - [ ] Exclude above-the-fold images (first 3-5 visible)
+  - [ ] Test on mobile devices (different viewports)
+  - [ ] Verify impact on LCP metric
+  - **Reasoning**: [Initial page load improvement]
   
 - [ ] **Optimize File Names**:
   - [ ] Image 1: Rename to [descriptive-keyword-name.jpg]
   - [ ] Image 2: Rename to [descriptive-keyword-name.jpg]
-  - [ ] Use hyphens, not underscores
+  - [ ] Use hyphens, not underscores (Google's preference)
+  - **Reasoning**: [Image search SEO and organization]
   
-- [ ] **Add to Image Sitemap**: [Yes/No with reasoning]
-- [ ] **Set proper dimensions** in HTML (width/height attributes)
+- [ ] **Add to Image Sitemap**: [Yes/No with strategic reasoning]
+- [ ] **Set proper dimensions** in HTML (prevents layout shift)
 - [ ] **Use responsive images** with srcset attribute
+- [ ] **Monitor**: Track Core Web Vitals impact post-implementation
 
 ## EXTERNAL LINK AUDIT
 - **Link Quality Assessment**: [Evaluate authority of outbound links]
@@ -312,30 +414,43 @@ Based on the content and structure:
 - **Bard/Gemini Alignment**: [Google AI alignment tactics]
 - **AI Training Data**: [Make content valuable for AI training]
 
-## ⚡ QUICK WINS (Implement Today - <1 Hour Each)
+## QUICK WINS (Implement Today - Under 1 Hour Each)
+
+**Prioritization Logic**:
+[Explain how these quick wins were selected based on impact-to-effort ratio, current site state, and immediate visibility opportunities]
 
 ### Immediate Actions Checklist
 - [ ] **Quick Win #1**: [Action title]
   - Implementation: [Exact code or steps]
   - Time: [X minutes]
+  - **Reasoning**: [Why this has outsized impact for minimal effort]
+  - Expected result: [Specific improvement]
   
 - [ ] **Quick Win #2**: [Action title]
   - Implementation: [Exact code or steps]
   - Time: [X minutes]
+  - **Reasoning**: [Strategic importance]
+  - Expected result: [Specific improvement]
   
 - [ ] **Quick Win #3**: [Action title]
   - Implementation: [Exact code or steps]
   - Time: [X minutes]
+  - **Reasoning**: [Why this matters now]
+  - Expected result: [Specific improvement]
   
 - [ ] **Quick Win #4**: [Action title]
   - Implementation: [Exact code or steps]
   - Time: [X minutes]
+  - **Reasoning**: [Impact analysis]
+  - Expected result: [Specific improvement]
   
 - [ ] **Quick Win #5**: [Action title]
   - Implementation: [Exact code or steps]
   - Time: [X minutes]
+  - **Reasoning**: [Why prioritize this]
+  - Expected result: [Specific improvement]
 
-(Continue for 10+ quick wins with checkboxes and exact steps)
+(Continue for 10+ quick wins with deep reasoning for each)
 
 ## LONG-TERM STRATEGY (30-90 Days)
 - **Content Expansion Plan**: [Detailed roadmap]
@@ -360,68 +475,131 @@ Based on the content and structure:
 
 **Scoring Breakdown**: [Explain each score component]
 
-## 📋 IMPLEMENTATION PRIORITY MATRIX
+## IMPLEMENTATION PRIORITY MATRIX
 
-### 🔴 CRITICAL - Do First (This Week)
+**Prioritization Methodology**:
+[Explain the framework used to prioritize these tasks: impact vs effort, dependencies, quick wins vs strategic moves, risk factors, resource requirements]
+
+### CRITICAL - Do First (This Week)
+**Strategic Reasoning**: [Why these tasks take absolute priority - cascading effects, competitive urgency, revenue impact]
+
 - [ ] **Task 1**: [Action] - Effort: [time] - Impact: [high/critical]
+  - Reasoning: [Deep analysis of why this is critical]
+  - Dependencies: [What must be done first]
+  - Risk if delayed: [Consequences of not doing this now]
+  
 - [ ] **Task 2**: [Action] - Effort: [time] - Impact: [high/critical]
+  - Reasoning: [Why this can't wait]
+  - Dependencies: [Prerequisites]
+  - Risk if delayed: [Impact analysis]
+  
 - [ ] **Task 3**: [Action] - Effort: [time] - Impact: [high/critical]
+  - Reasoning: [Urgency factors]
+  - Dependencies: [Related tasks]
+  - Risk if delayed: [Cost of delay]
 
-**Team Assignment**: [Suggest who should handle]
-**Deadline**: [Recommended completion date]
+**Team Assignment**: [Suggested roles with reasoning]
+**Deadline**: [Recommended date with justification]
+**Success Metrics**: [How to measure completion]
 
 ---
 
-### 🟡 HIGH PRIORITY - This Week
+### HIGH PRIORITY - This Week
+**Strategic Reasoning**: [Why these follow critical tasks - building on foundation, maximizing early wins]
+
 - [ ] **Task 1**: [Action] - Effort: [time] - Impact: [high]
+  - Reasoning: [Strategic value]
+  - Builds on: [Which critical tasks]
+  
 - [ ] **Task 2**: [Action] - Effort: [time] - Impact: [high]
+  - Reasoning: [Why this matters]
+  - Synergies: [Related improvements]
+  
 - [ ] **Task 3**: [Action] - Effort: [time] - Impact: [high]
 - [ ] **Task 4**: [Action] - Effort: [time] - Impact: [high]
 
-**Team Assignment**: [Suggest who should handle]
-**Deadline**: [Recommended completion date]
+**Team Assignment**: [Suggested roles]
+**Deadline**: [Recommended date]
+**Success Metrics**: [Measurement criteria]
 
 ---
 
-### 🟢 MEDIUM PRIORITY - This Month
+### MEDIUM PRIORITY - This Month
+**Strategic Reasoning**: [Long-term value, optimization, competitive positioning]
+
 - [ ] **Task 1**: [Action] - Effort: [time] - Impact: [medium]
+  - Reasoning: [Why this timing works]
+  
 - [ ] **Task 2**: [Action] - Effort: [time] - Impact: [medium]
 - [ ] **Task 3**: [Action] - Effort: [time] - Impact: [medium]
 - [ ] **Task 4**: [Action] - Effort: [time] - Impact: [medium]
 
-**Team Assignment**: [Suggest who should handle]
-**Deadline**: [Recommended completion date]
+**Team Assignment**: [Suggested roles]
+**Deadline**: [Recommended date]
 
 ---
 
-### ⚪ LOW PRIORITY - Future/Ongoing
+### LOW PRIORITY - Future/Ongoing
+**Strategic Reasoning**: [Maintenance, incremental gains, continuous improvement]
+
 - [ ] **Task 1**: [Action] - Effort: [time] - Impact: [low/ongoing]
 - [ ] **Task 2**: [Action] - Effort: [time] - Impact: [low/ongoing]
 - [ ] **Task 3**: [Action] - Effort: [time] - Impact: [low/ongoing]
 
-**Team Assignment**: [Suggest who should handle]
+**Team Assignment**: [Suggested roles]
 **Review Date**: [When to revisit]
 
-## 👥 TEAM COLLABORATION NOTES
+## TEAM COLLABORATION NOTES
 
 ### Assignments & Responsibilities
+**Resource Allocation Strategy**: [How to divide work based on skills, capacity, and impact]
+
 - [ ] **Developer Tasks**: [List technical implementations]
+  - Complexity: [Assessment]
+  - Required skills: [Specific technologies]
+  
 - [ ] **Content Team Tasks**: [List content updates needed]
+  - Complexity: [Assessment]
+  - Required skills: [SEO writing, keyword research]
+  
 - [ ] **Marketing Team Tasks**: [List promotional activities]
+  - Complexity: [Assessment]
+  - Focus areas: [Channels and tactics]
+  
 - [ ] **Design Team Tasks**: [List visual/UX improvements]
+  - Complexity: [Assessment]
+  - Tools needed: [Software requirements]
 
 ### Review & Sign-off
 - [ ] **Technical Review Complete**: [Assigned to]
+  - Review criteria: [What to verify]
+  
 - [ ] **Content Review Complete**: [Assigned to]
+  - Review criteria: [Quality standards]
+  
 - [ ] **Final QA Testing**: [Assigned to]
+  - Test cases: [What to validate]
+  
 - [ ] **Live Deployment**: [Assigned to]
+  - Pre-launch checklist: [Critical checks]
+  
 - [ ] **Post-Launch Monitoring**: [Assigned to - First 7 days]
+  - Metrics to track: [KPIs]
+  - Alert thresholds: [When to act]
 
 ---
 
+**DEEP ANALYSIS METHODOLOGY**: This audit uses systematic analysis of interconnected SEO factors. Each recommendation is based on:
+1. Data pattern analysis
+2. Industry best practices
+3. Competitive benchmarking
+4. User behavior insights
+5. Search engine algorithm understanding
+6. Business impact assessment
+
 **FORMATTING NOTE**: Use markdown checkbox syntax (- [ ]) for all actionable items. This makes it easy to share in GitHub, Notion, Trello, or any markdown-compatible tool. Team members can check off items as they complete them.
 
-Be extremely detailed, specific, and actionable. Provide code examples, exact wording, and step-by-step instructions. Think like an expert SEO consultant delivering a $5,000 audit that a TEAM can execute together using this checklist.`;
+Think deeply about each aspect. Consider how different factors interact. Provide reasoning that demonstrates expert-level understanding of SEO, user behavior, and search algorithms. Be extremely detailed, specific, and actionable. Provide code examples, exact wording, and step-by-step instructions. Think like a world-class SEO consultant delivering a $5,000 audit that a TEAM can execute together using this checklist.`;
 
   return prompt;
 }
@@ -456,7 +634,7 @@ async function callClaudeAPI(apiKey, model, prompt) {
     },
     body: JSON.stringify({
       model: model || DEFAULT_MODEL,
-      system: 'You are a world-class SEO and AEO consultant with 15+ years of experience. You provide comprehensive, actionable audits worth $5,000+. You go deep into every aspect of optimization, provide specific implementation steps, and deliver measurable results. You think strategically while being extremely practical.',
+      system: 'You are a world-class SEO and AEO consultant with 15+ years of experience. You provide comprehensive, actionable audits worth $5,000+. You analyze data deeply, identify patterns and connections between factors, and think through the reasoning behind each recommendation. You go deep into every aspect of optimization, provide specific implementation steps with detailed explanations of WHY each change matters, and deliver measurable results. You think strategically while being extremely practical. Take your time to analyze thoroughly - quality and depth are paramount.',
       messages: [{
         role: 'user',
         content: [{

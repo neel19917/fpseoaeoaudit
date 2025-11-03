@@ -152,11 +152,11 @@ For each recommendation, show your analytical reasoning before providing the che
   - [ ] Step 2: [Next step with explanation]
   - [ ] Step 3: [Final step with verification]
 - [ ] **Before/After Example**:
-  ```
+  \`\`\`
   Before: [current state]
   After: [improved state]
   Reasoning: [Why this change works]
-  ```
+  \`\`\`
 - [ ] **Test & Verify**: [How to confirm success]
 - [ ] **Monitor**: [Metrics to track post-implementation]
 

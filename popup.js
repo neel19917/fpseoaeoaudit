@@ -327,6 +327,7 @@ function collectSignalsFromPage() {
 
 /**
  * Gets signals from the current tab's content script.
+ * OPTIMIZED: Uses message-based communication for better performance
  */
 async function getSignals() {
   try {
@@ -338,6 +339,23 @@ async function getSignals() {
       throw new Error('Cannot analyze this page type. Please navigate to a regular webpage.');
     }
 
+    currentTabId = tab.id;
+
+    // Request signals from content script via message (uses cache if available)
+    try {
+      const response = await chrome.tabs.sendMessage(tab.id, { 
+        type: 'GET_SIGNALS',
+        forceRefresh: false // Use cache within 5 seconds
+      });
+
+      if (response && response.success && response.signals) {
+        console.log('[Popup] Signals received from content script (cached or fresh)');
+        return response.signals;
+      }
+    } catch (e) {
+      console.log('[Popup] Content script not responding:', e.message);
+    }
+
     // Try to refresh signals (for SPAs that may have changed)
     try {
       await chrome.tabs.sendMessage(tab.id, { type: 'REFRESH_SIGNALS' });
@@ -345,20 +363,26 @@ async function getSignals() {
       // Content script may not be ready, that's ok - we'll inject it
     }
 
-    // Try to get signals from content script first
+    // Try to get signals from content script first (legacy method)
     try {
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
+          // Try new method first
+          if (typeof window.__SEO_AEO_SIGNALS_COLLECT__ === 'function') {
+            return window.__SEO_AEO_SIGNALS_COLLECT__();
+          }
+          // Fall back to old cached global
           return window.__SEO_AEO_SIGNALS__ || null;
         }
       });
 
       if (results && results[0] && results[0].result) {
+        console.log('[Popup] Signals collected via executeScript');
         return results[0].result;
       }
     } catch (e) {
-      console.log('Content script not available, injecting fallback...');
+      console.log('[Popup] Content script not available, injecting fallback...');
     }
 
     // Fallback: inject and collect signals directly

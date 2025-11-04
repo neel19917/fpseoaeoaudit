@@ -1,12 +1,26 @@
 /**
  * Content script that collects SEO and AEO signals from the current page.
- * Stores results in window.__SEO_AEO_SIGNALS__ for popup.js to access.
+ * Optimized for performance - only runs when requested.
  */
 
 (function() {
   'use strict';
 
-  function collectSignals() {
+  // Cache for signals to avoid re-collection
+  let cachedSignals = null;
+  let cacheTimestamp = 0;
+  const CACHE_DURATION = 5000; // 5 seconds
+
+  function collectSignals(forceRefresh = false) {
+    // Return cached signals if still valid
+    const now = Date.now();
+    if (!forceRefresh && cachedSignals && (now - cacheTimestamp) < CACHE_DURATION) {
+      console.log('[ContentScript] Returning cached signals');
+      return cachedSignals;
+    }
+
+    console.log('[ContentScript] Collecting fresh signals...');
+    const startTime = performance.now();
     const signals = {
       url: window.location.href,
       timestamp: Date.now(),
@@ -54,11 +68,16 @@
       }));
 
     // Links - separate internal/external, skip data: and javascript: URLs, ignore anchors
+    // OPTIMIZED: Use limit to avoid processing thousands of links
     const currentHost = window.location.hostname;
-    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const allLinks = document.querySelectorAll('a[href]');
     const processedLinks = [];
+    const MAX_LINKS_TO_PROCESS = 200; // Limit to prevent lag on huge pages
     
+    let linkCount = 0;
     for (const link of allLinks) {
+      if (linkCount >= MAX_LINKS_TO_PROCESS) break;
+      
       try {
         const href = link.href;
         // Skip data: and javascript: URLs
@@ -80,9 +99,10 @@
         
         processedLinks.push({
           href: url.href.split('#')[0], // Remove hash
-          text: link.textContent.trim(),
+          text: link.textContent.trim().substring(0, 100), // Limit text length
           isInternal
         });
+        linkCount++;
       } catch (e) {
         // Skip malformed URLs
         continue;
@@ -100,17 +120,20 @@
       .slice(0, 10)
       .map(l => ({ href: l.href, text: l.text }));
     
+    // Count total links on page for accurate stats
     signals.linkCounts = {
       internal: internalLinks.length,
       external: externalLinks.length,
-      total: processedLinks.length
+      total: allLinks.length // Use actual DOM count
     };
 
     // Images - collect alt attributes
-    const allImages = Array.from(document.querySelectorAll('img'));
+    // OPTIMIZED: Limit to first 50 images to avoid lag
+    const allImages = document.querySelectorAll('img');
+    const imageArray = Array.from(allImages).slice(0, 50);
     const imagesWithoutAlt = [];
     
-    signals.images = allImages
+    signals.images = imageArray
       .slice(0, 10)
       .map(img => {
         const hasAlt = img.hasAttribute('alt');
@@ -131,9 +154,10 @@
         };
       });
     
+    // Count all images but only analyze first 50
     signals.imageStats = {
       total: allImages.length,
-      withAlt: allImages.filter(img => img.alt && img.alt.trim()).length,
+      withAlt: imageArray.filter(img => img.alt && img.alt.trim()).length,
       withoutAlt: imagesWithoutAlt.length,
       missingAltExamples: imagesWithoutAlt.slice(0, 10)
     };
@@ -175,31 +199,63 @@
     });
 
     // Body text sample (truncate to ~3000 chars)
-    const bodyText = document.body ? document.body.textContent || '' : '';
-    signals.bodyTextSample = bodyText
-      .replace(/\s+/g, ' ')
-      .trim()
-      .substring(0, 3000);
+    // OPTIMIZED: Use faster method and limit word count to main content
+    const bodyElement = document.body;
+    if (bodyElement) {
+      const bodyText = bodyElement.textContent || '';
+      signals.bodyTextSample = bodyText
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 3000);
+      
+      // OPTIMIZED: Approximate word count from sample instead of entire body
+      // This is much faster and still accurate enough for SEO analysis
+      const sampleText = bodyText.substring(0, 10000); // Only count first 10K chars
+      const sampleWordCount = sampleText.trim().split(/\s+/).filter(w => w.length > 0).length;
+      signals.wordCount = Math.round((bodyText.length / sampleText.length) * sampleWordCount);
+    } else {
+      signals.bodyTextSample = '';
+      signals.wordCount = 0;
+    }
+
+    // Cache the results
+    cachedSignals = signals;
+    cacheTimestamp = Date.now();
     
-    // Approximate word count (simple split on whitespace)
-    signals.wordCount = bodyText
-      .trim()
-      .split(/\s+/)
-      .filter(word => word.length > 0).length;
+    const elapsed = performance.now() - startTime;
+    console.log(`[ContentScript] Signal collection completed in ${elapsed.toFixed(2)}ms`);
 
     return signals;
   }
 
-  // Store signals globally for popup.js to access
-  window.__SEO_AEO_SIGNALS__ = collectSignals();
+  // DON'T collect on page load - only when requested
+  // This prevents lag on initial page load
+  console.log('[ContentScript] Ready and waiting for signal requests...');
 
-  // Re-collect on popup request (for SPAs that may have changed)
+  // Listen for signal requests from popup
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'REFRESH_SIGNALS') {
-      window.__SEO_AEO_SIGNALS__ = collectSignals();
-      sendResponse({ success: true });
+    if (message.type === 'GET_SIGNALS') {
+      try {
+        const signals = collectSignals(message.forceRefresh || false);
+        sendResponse({ success: true, signals });
+      } catch (error) {
+        console.error('[ContentScript] Error collecting signals:', error);
+        sendResponse({ success: false, error: error.message });
+      }
+    } else if (message.type === 'REFRESH_SIGNALS') {
+      try {
+        const signals = collectSignals(true);
+        window.__SEO_AEO_SIGNALS__ = signals; // Update global for backwards compat
+        sendResponse({ success: true, signals });
+      } catch (error) {
+        console.error('[ContentScript] Error refreshing signals:', error);
+        sendResponse({ success: false, error: error.message });
+      }
     }
     return true; // Keep channel open for async response
   });
+
+  // Expose method for legacy access (if popup.js tries to access directly)
+  window.__SEO_AEO_SIGNALS_COLLECT__ = collectSignals;
 })();
 

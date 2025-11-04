@@ -191,6 +191,21 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <label for="maxTokens">Max Tokens (Output Length)</label>
+      <div class="help-text">
+        Maximum tokens for the API response. Higher values allow longer, more detailed audits but cost more.
+        <br><strong>Recommended:</strong> 16000 (comprehensive audits)
+        <br><strong>If getting token errors:</strong> Try 8000 or switch to a different model
+      </div>
+      <select id="maxTokens">
+        <option value="4096">4,096 tokens (Short audit, ~$0.10)</option>
+        <option value="8000">8,000 tokens (Standard audit, ~$0.20)</option>
+        <option value="16000" selected>16,000 tokens (Comprehensive audit, ~$0.40)</option>
+        <option value="32000">32,000 tokens (Very detailed, ~$0.80)</option>
+      </select>
+    </div>
+
     <button id="saveBtn">Save Settings</button>
     <button id="testBtn" style="background: #28a745; margin-left: 10px;">Test API Key</button>
     <div id="status" class="status"></div>

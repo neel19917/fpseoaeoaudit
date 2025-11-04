@@ -6,6 +6,7 @@
 const apiKeyInput = document.getElementById('apiKey');
 const modelSelect = document.getElementById('model');
 const verboseLoggingCheckbox = document.getElementById('verboseLogging');
+const maxTokensSelect = document.getElementById('maxTokens');
 const saveBtn = document.getElementById('saveBtn');
 const testBtn = document.getElementById('testBtn');
 const toggleKeyBtn = document.getElementById('toggleKey');
@@ -55,11 +56,11 @@ function toggleKeyVisibility() {
 async function loadSettings() {
   try {
     // Try sync storage first
-    let result = await chrome.storage.sync.get(['apiKey', 'model', 'verboseLogging']);
+    let result = await chrome.storage.sync.get(['apiKey', 'model', 'verboseLogging', 'maxTokens']);
     
     // Fallback to local storage if sync is empty
     if (!result.apiKey) {
-      const localResult = await chrome.storage.local.get(['apiKey', 'model', 'verboseLogging']);
+      const localResult = await chrome.storage.local.get(['apiKey', 'model', 'verboseLogging', 'maxTokens']);
       if (localResult.apiKey) {
         result = localResult;
         console.log('[Options] Loaded from local storage (sync unavailable or empty)');
@@ -69,7 +70,8 @@ async function loadSettings() {
           await chrome.storage.sync.set({
             apiKey: localResult.apiKey,
             model: localResult.model,
-            verboseLogging: localResult.verboseLogging
+            verboseLogging: localResult.verboseLogging,
+            maxTokens: localResult.maxTokens
           });
           console.log('[Options] Migrated settings to sync storage');
         } catch (e) {
@@ -93,6 +95,13 @@ async function loadSettings() {
     
     // Load verbose logging setting
     verboseLoggingCheckbox.checked = result.verboseLogging || false;
+    
+    // Load max tokens setting (default to 16000)
+    if (result.maxTokens) {
+      maxTokensSelect.value = result.maxTokens;
+    } else {
+      maxTokensSelect.value = '16000';
+    }
   } catch (error) {
     console.error('Failed to load settings:', error);
     showStatus('Failed to load settings: ' + error.message, true);
@@ -106,6 +115,7 @@ async function saveSettings() {
   const apiKey = apiKeyInput.value.trim();
   const model = modelSelect.value;
   const verboseLogging = verboseLoggingCheckbox.checked;
+  const maxTokens = parseInt(maxTokensSelect.value);
 
   // If the input shows masked key (contains "..."), don't save anything new
   // User needs to reveal the key first or paste a new one
@@ -120,10 +130,10 @@ async function saveSettings() {
     if (currentKey.apiKey) {
       const maskedCurrent = maskKey(currentKey.apiKey);
       if (apiKey === maskedCurrent) {
-        // User hasn't changed the key, just save model and verbose setting
+        // User hasn't changed the key, just save model, verbose setting, and max tokens
         try {
-          await chrome.storage.sync.set({ model: model, verboseLogging: verboseLogging });
-          await chrome.storage.local.set({ model: model, verboseLogging: verboseLogging });
+          await chrome.storage.sync.set({ model: model, verboseLogging: verboseLogging, maxTokens: maxTokens });
+          await chrome.storage.local.set({ model: model, verboseLogging: verboseLogging, maxTokens: maxTokens });
           showStatus('Settings saved successfully!');
         } catch (error) {
           showStatus('Failed to save settings: ' + error.message, true);
@@ -163,28 +173,30 @@ async function saveSettings() {
     await chrome.storage.sync.set({
       apiKey: keyToSave,
       model: model,
-      verboseLogging: verboseLogging
+      verboseLogging: verboseLogging,
+      maxTokens: maxTokens
     });
 
     // Also save to local storage as backup (in case sync fails)
     await chrome.storage.local.set({
       apiKey: keyToSave,
       model: model,
-      verboseLogging: verboseLogging
+      verboseLogging: verboseLogging,
+      maxTokens: maxTokens
     });
 
     // Wait a moment for sync to propagate
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify it was saved (try sync first, fallback to local)
-    let verify = await chrome.storage.sync.get(['apiKey', 'model', 'verboseLogging']);
+    let verify = await chrome.storage.sync.get(['apiKey', 'model', 'verboseLogging', 'maxTokens']);
     if (!verify.apiKey && keyToSave) {
       // Fallback to local if sync failed
-      verify = await chrome.storage.local.get(['apiKey', 'model', 'verboseLogging']);
+      verify = await chrome.storage.local.get(['apiKey', 'model', 'verboseLogging', 'maxTokens']);
       console.warn('[Options] Sync storage failed, using local storage backup');
     }
 
-    console.log('[Options] Saved API key - Length:', verify.apiKey?.length || 0, 'Matches:', verify.apiKey === keyToSave, 'Verbose:', verify.verboseLogging);
+    console.log('[Options] Saved API key - Length:', verify.apiKey?.length || 0, 'Matches:', verify.apiKey === keyToSave, 'Verbose:', verify.verboseLogging, 'Max tokens:', verify.maxTokens);
     
     if (verify.apiKey !== keyToSave && keyToSave !== '') {
       showStatus('Warning: Key may not have saved correctly. Please try again.', true);
@@ -224,7 +236,8 @@ async function saveSettings() {
       await chrome.storage.local.set({
         apiKey: keyToSave,
         model: model,
-        verboseLogging: verboseLogging
+        verboseLogging: verboseLogging,
+        maxTokens: maxTokens
       });
       showStatus('Saved to local storage (sync unavailable). Settings may not sync across devices.');
     } catch (localError) {

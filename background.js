@@ -5,7 +5,7 @@
 
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
-const DEFAULT_MAX_TOKENS = 8000;
+const DEFAULT_MAX_TOKENS = 16000; // Increased for comprehensive audits
 const DEFAULT_TEMPERATURE = 0.5;
 
 // Verbose logging utility
@@ -730,11 +730,28 @@ async function callClaudeAPI(apiKey, model, prompt) {
     throw new Error('API key appears to be invalid (too short)');
   }
 
+  // Get max tokens setting from storage (default to 16000)
+  let maxTokensSetting = DEFAULT_MAX_TOKENS;
+  try {
+    const settings = await chrome.storage.sync.get(['maxTokens']);
+    if (settings.maxTokens) {
+      maxTokensSetting = parseInt(settings.maxTokens);
+    } else {
+      // Try local storage
+      const localSettings = await chrome.storage.local.get(['maxTokens']);
+      if (localSettings.maxTokens) {
+        maxTokensSetting = parseInt(localSettings.maxTokens);
+      }
+    }
+  } catch (e) {
+    console.warn('[SEO Auditor] Could not load maxTokens setting, using default:', DEFAULT_MAX_TOKENS);
+  }
+
   console.log('[SEO Auditor] Calling Claude API with key length:', cleanApiKey.length, 'model:', model);
   vlog('Calling Claude API...');
   vlog('Model:', model);
   vlog('Prompt length:', prompt.length, 'characters');
-  vlog('Max tokens:', DEFAULT_MAX_TOKENS);
+  vlog('Max tokens:', maxTokensSetting);
   vlog('Temperature:', DEFAULT_TEMPERATURE);
   
   const startTime = Date.now();
@@ -757,7 +774,7 @@ async function callClaudeAPI(apiKey, model, prompt) {
           text: prompt
         }]
       }],
-      max_tokens: DEFAULT_MAX_TOKENS,
+      max_tokens: maxTokensSetting,
       temperature: DEFAULT_TEMPERATURE
     })
   });
@@ -792,14 +809,22 @@ async function callClaudeAPI(apiKey, model, prompt) {
     } else {
       try {
         const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.error?.message || errorMessage;
+        const apiError = errorJson.error?.message || '';
+        
+        // Check for token limit errors
+        if (apiError.includes('prompt is too long') || apiError.includes('max_tokens') || apiError.includes('token') && apiError.includes('limit')) {
+          errorMessage = `Token limit error: ${apiError}\n\nThe page content is too large for the current settings.\n\nSolutions:\n1. Try using Claude Opus 4 (has 200K token context)\n2. Use Claude Sonnet 3.5 (has 200K token context)\n3. The current max_tokens setting may need adjustment`;
+        } else {
+          errorMessage = apiError || errorMessage;
+        }
       } catch (e) {
-        errorMessage = `API error (${response.status}): ${errorText.substring(0, 100)}`;
+        errorMessage = `API error (${response.status}): ${errorText.substring(0, 200)}`;
       }
     }
     
     // Log error details (without exposing key)
     console.error('[SEO Auditor] API error:', response.status, errorMessage);
+    console.error('[SEO Auditor] Full error response:', errorText.substring(0, 500));
     
     throw new Error(errorMessage);
   }
@@ -918,12 +943,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       try {
         console.log('[SEO Auditor] Testing API key...');
-        const result = await testAPIKey();
+      const result = await testAPIKey();
         console.log('[SEO Auditor] API key test result:', result.success ? 'SUCCESS' : 'FAILED');
         if (!result.success) {
           logError('API Key Test', new Error(result.error));
         }
-        sendResponse(result);
+      sendResponse(result);
       } catch (error) {
         const errorLog = logError('TEST_API_KEY handler', error);
         sendResponse({
@@ -1008,7 +1033,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         vlog('Starting API call with signals:', Object.keys(signals));
-        
+
         // Build prompt and call API
         const prompt = buildPrompt(signals);
         const analysis = await callClaudeAPI(apiKey, model, prompt);
